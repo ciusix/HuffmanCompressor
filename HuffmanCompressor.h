@@ -3,6 +3,8 @@
 
 #define LETTER unsigned short
 #define INVALID_CHARACTER 0x40
+#define NOT_LEAF_BIT 0
+#define LEAF_BIT 1
 
 #include <string>
 #include <fstream>

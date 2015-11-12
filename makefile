@@ -16,8 +16,8 @@ build: clean huffman
 # To create the executable file count we need the object files
 # countwords.o, counter.o, and scanner.o:
 #
-huffman:  HuffmanCompressor.o HuffmanDeompressor.o
-	$(CC) $(CFLAGS) -o huffman main.cpp HuffmanCompressor.o CompressorTreeNode.o HuffmanDecompressor.o
+huffman:  HuffmanCompressor.o HuffmanDecompressor.o
+	$(CC) $(CFLAGS) -o huffman main.cpp HuffmanCompressor.o CompressorTreeNode.o HuffmanDecompressor.o DecompressorTreeNode.o
 
 # To create the object file countwords.o, we need the source
 # files countwords.c, scanner.h, and counter.h:
@@ -30,10 +30,20 @@ HuffmanCompressor.o:  HuffmanCompressor.cpp HuffmanCompressor.h CompressorTreeNo
 CompressorTreeNode.o: CompressorTreeNode.cpp CompressorTreeNode.h
 	$(CC) $(CFLAGS) -c CompressorTreeNode.cpp
 	
-HuffmanDeompressor.o:  HuffmanDecompressor.cpp HuffmanDecompressor.h
+HuffmanDecompressor.o:  HuffmanDecompressor.cpp HuffmanDecompressor.h DecompressorTreeNode.o
 	$(CC) $(CFLAGS) -c HuffmanDecompressor.cpp
+    
+DecompressorTreeNode.o: DecompressorTreeNode.cpp DecompressorTreeNode.h
+	$(CC) $(CFLAGS) -c DecompressorTreeNode.cpp
 	
 clean:
+ifeq ($(OS),Windows_NT)
+	del *.o
+	del *.gch
+	del *.out
+	del *.exe
+else
 	-rm *.o
 	-rm *.gch
 	-rm *.out
+endif

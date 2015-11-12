@@ -220,11 +220,11 @@ void HuffmanCompressor::addNodeToDictionary(CompressorTreeNode* node, ofstream* 
 	// 0 - not a leaf, 1 - leaf
 	if (node->getNodeOne() != NULL && node->getNodeTwo() != NULL) {
 		// cout << "0" << endl;
-		writeABitToFile(outputFile, 0, false);
+		writeABitToFile(outputFile, NOT_LEAF_BIT, false);
 		addNodeToDictionary(node->getNodeOne(), outputFile);
 		addNodeToDictionary(node->getNodeTwo(), outputFile);
 	} else {
-		writeABitToFile(outputFile, 1, false);
+		writeABitToFile(outputFile, LEAF_BIT, false);
 		for (int i = 0; i < letterSizeBits; i++) {
 			writeABitToFile(outputFile, (node->getLetter()) >> (letterSizeBits - 1 - i), false);
 		}
