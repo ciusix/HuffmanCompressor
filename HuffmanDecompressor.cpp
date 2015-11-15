@@ -162,7 +162,7 @@ void HuffmanDecompressor::readFileAndDecompress(ifstream* file) {
 	if (debugMode) {
 		cout << "Started decompressing " << inputFileName << " and writing output to " << outputFileName << endl;
 	}
-    LETTER bit = readABitFromFile(file);
+    LETTER bit = 0x1; // readABitFromFile(file);
  		
     ofstream outputFile;
 	outputFile.open(outputFileName.c_str());
@@ -176,12 +176,14 @@ void HuffmanDecompressor::readFileAndDecompress(ifstream* file) {
 				}
 				currentTreeNode = rootTreeNode;
 			} else {
+				bit = readABitFromFile(file);
+			
 				if (bit == 0) {
 					currentTreeNode = currentTreeNode->getNodeOne();
 				} else {
 					currentTreeNode = currentTreeNode->getNodeTwo();
 				}
-				bit = readABitFromFile(file);
+				
 			}
 		}
 
@@ -209,7 +211,7 @@ LETTER HuffmanDecompressor::readABitFromFile(ifstream* file) {
 	static char c1, c2, c3;
 	static short leftUntilEOF = NOT_EOF;
 	
-	if (leftUntilEOF == 1) {
+	if (leftUntilEOF == 0) {
 		return INVALID_CHARACTER;
 	}
 	
@@ -227,10 +229,11 @@ LETTER HuffmanDecompressor::readABitFromFile(ifstream* file) {
 		}
 		currentBitNumber = 7;
 	} else {
-		if (leftUntilEOF != NOT_EOF) {
-			leftUntilEOF--;
-		}
 		currentBitNumber--;
+	}
+	
+	if (leftUntilEOF != NOT_EOF) {
+		leftUntilEOF--;
 	}
 	
 	return (c1 >> currentBitNumber) & 1;

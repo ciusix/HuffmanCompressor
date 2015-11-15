@@ -40,10 +40,10 @@ clean:
 ifeq ($(OS),Windows_NT)
 	del *.o
 	del *.gch
-	del *.out
 	del *.exe
 else
 	-rm *.o
 	-rm *.gch
-	-rm *.out
+	-rm huffman
+	-rm *.compressed
 endif

@@ -1,21 +1,21 @@
-for ((i=2; i<=16; i++)); do
-	rm test1-uncompressed.txt
-	rm test1.compressed
-	
+for ((i=2; i<=16; i++)); do	
 	./huffman compress test1.txt $i
 	./huffman decompress test1.compressed
 	
-	cmp --silent test1.txt test1-uncompressed.txt || echo "Files are different!"
+	cmp --silent test1.txt test1-uncompressed.txt || echo "Files are different!" $i "bits"
 	echo "Checked test 1 with " $i " bits";
+	
+	rm test1-uncompressed.txt
+	rm test1.compressed
 done
 
-for ((i=2; i<=16; i++)); do
-	rm test3-uncompressed.txt
-	rm test3.compressed
+for ((i=2; i<=16; i++)); do	
+	./huffman compress test2.txt $i
+	./huffman decompress test2.compressed
 	
-	./huffman compress test3.txt $i
-	./huffman decompress test3.compressed
+	cmp --silent test2.txt test2-uncompressed.txt || echo "Files are different!"
+	echo "Checked test 2 with " $i " bits";
 	
-	cmp --silent test3.txt test3-uncompressed.txt || echo "Files are different!"
-	echo "Checked test 3 with " $i " bits";
+	rm test2-uncompressed.txt
+	rm test2.compressed
 done
