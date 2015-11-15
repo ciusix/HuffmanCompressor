@@ -1,33 +1,52 @@
 #include "HuffmanCompressor.h"
 
 /* 
- * |0000|0000|0000|00..00|00...00|00...00|
+ * |00000000|00..00|0000|0000|0000|00..00|00...00|00...00|
  *
- *  ^    ^    ^    ^      ^       ^
- *  |    |    |    |      |       |
- *  |    |    |    |      |       +- Content (? bits)
- *  |    |    |    |      |       
- *  |    |    |    |      +- Dictionary tree (? bits)
- *  |    |    |    +- Left uncompressed bits (? bits)
- *  |    |    +- Left uncompressed bits length (4 bits) 
- *  |    +- Ignored bits count (4 bits)
- *  +- Letter size (4 bits)
- *
- *
+ *  ^        ^      ^    ^    ^    ^      ^       ^
+ *  |        |      |    |    |    |      |       |
+ *  |        |      |    |    |    |      |       +- Content (? bits)
+ *  |        |      |    |    |    |      +- Dictionary tree (? bits)
+ *  |        |      |    |    |    +- Left uncompressed bits (? bits)
+ *  |        |      |    |    +- Left uncompressed bits length (4 bits) 
+ *  |        |      |    +- Ignored (trailing zeros) bits count (4 bits)
+ *  |        |      +- Letter size (4 bits)
+ *  |        +- Extension in ASCII
+ *  +- Extension length (8 bits)
  */
  
 HuffmanCompressor::HuffmanCompressor(string inputFileName,
-                                     string outputFileName,
-                                     short letterSizeBits) {
+                                     short letterSizeBits,
+                                     bool debugMode) {
                                      
 	this->inputFileName = inputFileName;
-	this->outputFileName = outputFileName;
 	this->letterSizeBits = letterSizeBits;
 	
-	rootNode = new CompressorTreeNode(0);
+	this->debugMode = debugMode;
+	
+	string::size_type idx = inputFileName.rfind('.');
+	if(idx != string::npos) {
+    	extension = inputFileName.substr(idx+1);
+	}
+	else {
+    	extension = "";
+	}
+	if (debugMode) {
+		cout << "Current extension: " << extension << endl;
+	}
+	this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(extension.c_str()) - 1) + ".compressed";
+	
+	extensionLength = strlen(extension.c_str());
+	if (debugMode) {
+		cout << "Output file name: " << this->outputFileName << endl;
+	}
 }
 
 void HuffmanCompressor::compress() {
+	if (debugMode) {
+		cout << "Initiated compression" << endl;
+	}
+	
 	readFileAndMakeNodesList();
 	makeTreeFromNodesList();
 	makePairsFromTree();
@@ -35,9 +54,18 @@ void HuffmanCompressor::compress() {
 	addMetaDataToFile();
 	addDictionaryToFile();
 	readFileAndCompress();
+	writeIgnoredTrailingBits();
+	
+	if (debugMode) {
+		cout << "Ended compression" << endl;
+	}
 }
 
 void HuffmanCompressor::readFileAndMakeNodesList() {
+	if (debugMode) {
+		cout << "Started reading file " << inputFileName << " for the first time to build a dictionary" << endl;
+	}
+	
 	ifstream inputFile;
 	inputFile.open(inputFileName.c_str());
 
@@ -58,7 +86,6 @@ void HuffmanCompressor::readFileAndMakeNodesList() {
     		totalBits++;
     		
     		if (currentBitInLetter == letterSizeBits) {
-    			// cout << bitset<16>(letter) << endl;
     			addLetterToNodesList(letter);
     			
     			letter = 0;
@@ -71,20 +98,29 @@ void HuffmanCompressor::readFileAndMakeNodesList() {
     	leftBitsLength = (short)currentBitInLetter;
     	leftBits = letter;
     	
-    	cout << "Left bits: " << (int)currentBitInLetter << " " << bitset<16>(letter) << endl;
-    	cout << "Total bits: " << (totalBits + (int)currentBitInLetter)<< endl;
+    	if (debugMode) {
+    		cout << "Ended reading file for the first time" << endl;
+    		cout << "Left bits that do not form a letter: " << makeStringFromBits(letter, currentBitInLetter) << " (" << (int)currentBitInLetter << ")" << endl;
+    		cout << "Total bits read from file: " << totalBits << endl;
+    		cout << "Letters and their frequency: " << endl;
+    		for (int i = 0; i < nodeList.size(); i++) {
+    			cout << makeStringFromBits(nodeList[i]->getLetter(), letterSizeBits) << " (" << nodeList[i]->getCount() << ")" << endl;
+    		}
+    	}
     	
   		inputFile.close(); 
-  	}
-	printf("\n");
-	
-	for (vector<CompressorTreeNode*>::iterator it = nodeList.begin(); it != nodeList.end(); ++it) {
-		cout << bitset<16>((*it)->getLetter()) << " " << (*it)->getCount() << endl;
-	}
-	
+  	} else {
+  		cout << "Error reading file " << inputFileName << endl;
+  		cout << "Quitting..." << endl;
+  		exit(1);
+  	}	
 }
 
 void HuffmanCompressor::makeTreeFromNodesList() {
+	if (debugMode) {
+		cout << "Started making tree nodes" << endl;
+	}
+
 	while (nodeList.size() != 1) {
 		CompressorTreeNode* firstSmallest = NULL;
 		CompressorTreeNode* secondSmallest = NULL;
@@ -114,8 +150,6 @@ void HuffmanCompressor::makeTreeFromNodesList() {
 			}
 		}
 		
-		// cout << firstSmallest->getCount() << " and " << secondSmallest->getCount() << endl;
-		
 		if (firstPos > secondPos) {
 			nodeList.erase(nodeList.begin() + firstPos);
 			nodeList.erase(nodeList.begin() + secondPos);
@@ -127,22 +161,29 @@ void HuffmanCompressor::makeTreeFromNodesList() {
 		nodeList.push_back(new CompressorTreeNode(firstSmallest, secondSmallest));
 	}
 	rootNode = nodeList[0];
+	
+	if (debugMode) {
+		cout << "Ended making tree nodes" << endl;
+	}
 }
 
 void HuffmanCompressor::makePairsFromTree() {
+	if (debugMode) {
+		cout << "Started making pairs of dictionary values (short letters) for existing keys (letters)" << endl;
+	}
+	
 	addPairForNode(rootNode, 0, 0);
-	for (unsigned int i = 0; i < pairList.size(); i++) {
-		cout << bitset<16>(pairList[i]->letter) << " " << bitset<16>(pairList[i]->compressedLetter) << " (" << pairList[i]->compressedLetterLength << ")" << pairList[i]->letter << "\n";
-	}
-}
-
-HuffmanCompressor::LetterPair* HuffmanCompressor::getPairForLetter(LETTER letter) {
-	for (unsigned int i = 0; i < pairList.size(); i++) {
-		if (pairList[i]->letter == letter) {
-			return pairList[i];
+	
+	if (debugMode) {
+		cout << "Ended making pairs" << endl;
+		cout << "Pairs: " << endl;
+		for (unsigned int i = 0; i < pairList.size(); i++) {
+			cout << makeStringFromBits(pairList[i]->letter, letterSizeBits)
+			     << " -> "
+			     << makeStringFromBits(pairList[i]->compressedLetter, pairList[i]->compressedLetterLength)
+			     << endl;
 		}
-	}
-	return NULL;
+	}	
 }
 
 void HuffmanCompressor::addPairForNode(CompressorTreeNode* node, LETTER prefix, int length) {
@@ -161,7 +202,21 @@ void HuffmanCompressor::addPairForNode(CompressorTreeNode* node, LETTER prefix, 
 	}
 }
 
+HuffmanCompressor::LetterPair* HuffmanCompressor::getPairForLetter(LETTER letter) {
+	for (unsigned int i = 0; i < pairList.size(); i++) {
+		if (pairList[i]->letter == letter) {
+			return pairList[i];
+		}
+	}
+	return NULL;
+}
+
 void HuffmanCompressor::readFileAndCompress() {
+	if (debugMode) {
+		cout << "Started reading file " << inputFileName << " for the second time to compress" << endl;
+		cout << "Will write output to " << outputFileName << endl;
+	}
+
 	ifstream inputFile;
 	inputFile.open(inputFileName.c_str());
 
@@ -199,12 +254,48 @@ void HuffmanCompressor::readFileAndCompress() {
     		bit = readABitFromFile(&inputFile);
     	}
     	
-    	short leftOverBits = writeABitToFile(&outputFile, 0, true);
-    	cout << "These " << leftOverBits << " trailing 0's should be ignored" << endl;
+    	ignoredTrailingBits = writeABitToFile(&outputFile, 0, true);
+    	if (debugMode) {
+    		cout << "These " << ignoredTrailingBits << " trailing 0's at the end of " << outputFileName << " should be ignored" << endl;
+    	}
     	
   		inputFile.close(); 
   		outputFile.close();
+  	} else {
+  		cout << "Error reading " << inputFileName << " or writing " << outputFileName << endl;
+  		cout << "Quitting..." << endl;
+  		exit(1);
   	}
+  	
+  	if (debugMode) {
+		cout << "Ended reading file " << inputFileName << " for the second time" << endl;
+		cout << "Ended writing compressed output to " << outputFileName << endl;
+	}
+}
+
+void HuffmanCompressor::writeIgnoredTrailingBits() {
+	if (debugMode) {
+		cout << "Started writing ignored trailing bits count (" << (int)ignoredTrailingBits << ") to " << outputFileName << endl;
+	}
+
+  	char unreadBitsChar = 0;  
+  	unreadBitsChar = (unreadBitsChar | (letterSizeBits - 1)) << 4;
+  	unreadBitsChar = unreadBitsChar | (ignoredTrailingBits & 0x0F);
+  		
+  	FILE * pFile;
+  	pFile = fopen (outputFileName.c_str(), "r+");
+  	if (pFile != NULL) {
+  		fseek (pFile , extensionLength + 1 , SEEK_SET );
+  		fputc (unreadBitsChar, pFile );
+  		fclose ( pFile );
+  	}  else {
+  		cout << "Error working with " << outputFileName << endl;
+  		cout << "Quitting..." << endl;
+  		exit(1);
+  	}
+  	if (debugMode) {
+		cout << "Ended writing ignored trailing bits count" << endl;
+	}
 }
 
 void HuffmanCompressor::addDictionaryToFile() {
@@ -217,9 +308,7 @@ void HuffmanCompressor::addDictionaryToFile() {
 }
 
 void HuffmanCompressor::addNodeToDictionary(CompressorTreeNode* node, ofstream* outputFile) {
-	// 0 - not a leaf, 1 - leaf
 	if (node->getNodeOne() != NULL && node->getNodeTwo() != NULL) {
-		// cout << "0" << endl;
 		writeABitToFile(outputFile, NOT_LEAF_BIT, false);
 		addNodeToDictionary(node->getNodeOne(), outputFile);
 		addNodeToDictionary(node->getNodeTwo(), outputFile);
@@ -228,7 +317,6 @@ void HuffmanCompressor::addNodeToDictionary(CompressorTreeNode* node, ofstream* 
 		for (int i = 0; i < letterSizeBits; i++) {
 			writeABitToFile(outputFile, (node->getLetter()) >> (letterSizeBits - 1 - i), false);
 		}
-		// cout << "1 " << node->getLetter() << endl;
 	}
 }
 
@@ -236,28 +324,40 @@ void HuffmanCompressor::addMetaDataToFile() {
 	ofstream outputFile;
 	outputFile.open(outputFileName.c_str());
 	
-	short letterSize = letterSizeBits - 1;
-	writeABitToFile(&outputFile, letterSize >> 3, false);
-	writeABitToFile(&outputFile, letterSize >> 2, false);
-	writeABitToFile(&outputFile, letterSize >> 1, false);
-	writeABitToFile(&outputFile, letterSize, false);
+	if (outputFile.is_open()) {
+		outputFile << (char)extensionLength;
 	
-	// Ignored bits count, will be filled later
-	writeABitToFile(&outputFile, 0, false);
-	writeABitToFile(&outputFile, 0, false);
-	writeABitToFile(&outputFile, 0, false);
-	writeABitToFile(&outputFile, 0, false);
+		for (short i = 0; i < extensionLength; i++) {
+			outputFile << extension[i];
+		}
 	
-	writeABitToFile(&outputFile, leftBitsLength >> 3, false);
-	writeABitToFile(&outputFile, leftBitsLength >> 2, false);
-	writeABitToFile(&outputFile, leftBitsLength >> 1, false);
-	writeABitToFile(&outputFile, leftBitsLength, false);
+		short letterSize = letterSizeBits - 1;
+		writeABitToFile(&outputFile, letterSize >> 3, false);
+		writeABitToFile(&outputFile, letterSize >> 2, false);
+		writeABitToFile(&outputFile, letterSize >> 1, false);
+		writeABitToFile(&outputFile, letterSize, false);
 	
-	for (int i = 0; i < leftBitsLength; i++) {
-		writeABitToFile(&outputFile, leftBits >> (leftBitsLength - 1 - i), false);
-	}
+		// Ignored bits count, will be filled later
+		writeABitToFile(&outputFile, 0, false);
+		writeABitToFile(&outputFile, 0, false);
+		writeABitToFile(&outputFile, 0, false);
+		writeABitToFile(&outputFile, 0, false);
 	
-	outputFile.close();
+		writeABitToFile(&outputFile, leftBitsLength >> 3, false);
+		writeABitToFile(&outputFile, leftBitsLength >> 2, false);
+		writeABitToFile(&outputFile, leftBitsLength >> 1, false);
+		writeABitToFile(&outputFile, leftBitsLength, false);
+	
+		for (int i = 0; i < leftBitsLength; i++) {
+			writeABitToFile(&outputFile, leftBits >> (leftBitsLength - 1 - i), false);
+		}
+	
+		outputFile.close();
+	} else {
+  		cout << "Error writing " << outputFileName << endl;
+  		cout << "Quitting..." << endl;
+  		exit(1);
+  	}
 }
 
 LETTER HuffmanCompressor::readABitFromFile(ifstream* file) {
@@ -305,4 +405,17 @@ void HuffmanCompressor::addLetterToNodesList(LETTER letter) {
 	}
 	
 	nodeList.push_back(new CompressorTreeNode(letter));
+}
+
+string HuffmanCompressor::makeStringFromBits(LETTER bits, short length) {
+	string result = "";
+	for (short i = 0; i < length; i++) {
+		if (bits & 0x1) {
+			result = "1" + result;
+		} else {
+			result = "0" + result;
+		}
+		bits = bits >> 1;
+	}
+	return result;
 }

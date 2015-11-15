@@ -5,6 +5,7 @@
 #define INVALID_CHARACTER 0x40
 #define NOT_LEAF_BIT 0
 #define LEAF_BIT 1
+#define NOT_EOF 0x80
 
 #include <fstream>
 #include <iostream>
@@ -25,16 +26,20 @@ class HuffmanDecompressor {
 		short ignoredBitsCount;
 		LETTER leftUncompressedBits;
 		DecompressorTreeNode* rootTreeNode;
+		bool debugMode;
+		string extension;
         
 		void readMetaDataFromFile(ifstream*);
 		void readDictionaryFromFile(ifstream*);
         void readDictionaryNode(ifstream*, DecompressorTreeNode*, LETTER);
-        void printDictionary(DecompressorTreeNode*);
+        void printDictionary(DecompressorTreeNode*, int);
         void readFileAndDecompress(ifstream*);
 		LETTER readABitFromFile(ifstream*);
         short writeABitToFile(ofstream*, LETTER, bool);
+        string makeStringFromBits(LETTER, short); 
+        
     public:
-        HuffmanDecompressor(string, string);
+        HuffmanDecompressor(string, bool);
         void decompress();
 };
 

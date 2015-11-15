@@ -1,38 +1,86 @@
 #include "HuffmanDecompressor.h"
 
 /* 
- * |0000|0000|0000|00..00|00...00|00...00|
+ * |00000000|00..00|0000|0000|0000|00..00|00...00|00...00|
  *
- *  ^    ^    ^    ^      ^       ^
- *  |    |    |    |      |       |
- *  |    |    |    |      |       +- Content (? bits)
- *  |    |    |    |      |       
- *  |    |    |    |      +- Dictionary tree (? bits)
- *  |    |    |    +- Left uncompressed bits (? bits)
- *  |    |    +- Left uncompressed bits length (4 bits) 
- *  |    +- Ignored bits count (4 bits)
- *  +- Letter size (4 bits)
- *
- *
+ *  ^        ^      ^    ^    ^    ^      ^       ^
+ *  |        |      |    |    |    |      |       |
+ *  |        |      |    |    |    |      |       +- Content (? bits)
+ *  |        |      |    |    |    |      +- Dictionary tree (? bits)
+ *  |        |      |    |    |    +- Left uncompressed bits (? bits)
+ *  |        |      |    |    +- Left uncompressed bits length (4 bits) 
+ *  |        |      |    +- Ignored (trailing zeros) bits count (4 bits)
+ *  |        |      +- Letter size (4 bits)
+ *  |        +- Extension in ASCII
+ *  +- Extension length (8 bits)
  */
  
-HuffmanDecompressor::HuffmanDecompressor(string inputFileName, string outputFileName) {
+HuffmanDecompressor::HuffmanDecompressor(string inputFileName, bool debugMode) {
 	this->inputFileName = inputFileName;
-	this->outputFileName = outputFileName;
+	
+	this->debugMode = debugMode;
 }
 
 void HuffmanDecompressor::decompress() {
+	if (debugMode) {
+		cout << "Initiated decompression" << endl;
+	}
+	
 	ifstream inputFile;
 	inputFile.open(inputFileName.c_str());
 	
-	readMetaDataFromFile(&inputFile);
-	readDictionaryFromFile(&inputFile);
-    readFileAndDecompress(&inputFile);
-    
-	inputFile.close();
+	if (inputFile.is_open()) {
+		readMetaDataFromFile(&inputFile);
+		readDictionaryFromFile(&inputFile);
+    	readFileAndDecompress(&inputFile);
+    	
+		inputFile.close();
+	} else {
+  		cout << "Error reading file " << inputFileName << endl;
+  		cout << "Quitting..." << endl;
+  		exit(1);
+  	}
+  	
+  	if (debugMode) {
+		cout << "Ended decompression" << endl;
+	}
 }
 
 void HuffmanDecompressor::readMetaDataFromFile(ifstream* inputFile) {
+	if (debugMode) {
+		cout << "Started reading meta data" << endl;
+	}	
+	
+	// Extension
+	char extensionLength = 0;
+	extension = "";
+	inputFile->get(extensionLength);
+	for (int i = 0; i < (int)extensionLength; i++) {
+		char c;
+		inputFile->get(c);
+		extension = extension + c;
+	}
+	if (debugMode) {
+		cout << "Output extension: " << extension << endl;
+	}
+	
+	string::size_type idx = inputFileName.rfind('.');
+	string currentExtension = "";
+	if(idx != string::npos) {
+    	currentExtension = inputFileName.substr(idx+1);
+	}
+	else {
+    	currentExtension = "";
+	}
+	if (debugMode) {
+		cout << "Current extension: " << currentExtension << endl;
+	}
+	this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(currentExtension.c_str()) - 1) + "-uncompressed." + extension;
+	extensionLength = strlen(extension.c_str());
+	if (debugMode) {
+		cout << "Output file name: " << this->outputFileName << endl;
+	}
+	
 	letterSizeBits = 0;
 	letterSizeBits = readABitFromFile(inputFile) << 3;
 	letterSizeBits = letterSizeBits | (readABitFromFile(inputFile) << 2);
@@ -58,18 +106,26 @@ void HuffmanDecompressor::readMetaDataFromFile(ifstream* inputFile) {
 		leftUncompressedBits = leftUncompressedBits | (readABitFromFile(inputFile) << (leftUncompressedBitsCount - 1 - i));
 	}
 	
-	cout << "Read letter size: " << letterSizeBits << " bits" << endl;
-	cout << "Ignored bits count: " << ignoredBitsCount << endl;
-	cout << "Read uncompressed bits count: " << leftUncompressedBitsCount << endl;
-	cout << "Read uncompressed bits: " << bitset<16>(leftUncompressedBits) << endl;
-	
+	if (debugMode) {
+		cout << "Ended reading meta data" << endl;
+		cout << "Letter size: " << letterSizeBits << " bits" << endl;
+		cout << "Ignored trailing bits count: " << ignoredBitsCount << endl;
+		cout << "Uncompressed bits: " << makeStringFromBits(leftUncompressedBits, leftUncompressedBitsCount) << " (" << leftUncompressedBitsCount << ")" << endl;
+	}	
 }
 
 void HuffmanDecompressor::readDictionaryFromFile(ifstream* file) {
+	if (debugMode) {
+		cout << "Started reading dictionary" << endl;
+	}
     DecompressorTreeNode* rootNode = new DecompressorTreeNode();
     readDictionaryNode(file, rootNode, 0);
     rootTreeNode = rootNode;
-    printDictionary(rootNode);
+    if (debugMode) {
+    	cout << "Ended reading dictionary" << endl;
+    	cout << "Dictionary:" << endl;
+    	printDictionary(rootNode, 0);
+    }
 }
 
 void HuffmanDecompressor::readDictionaryNode(ifstream* file, DecompressorTreeNode* node, LETTER key) {
@@ -93,53 +149,91 @@ void HuffmanDecompressor::readDictionaryNode(ifstream* file, DecompressorTreeNod
     }
 }
 
-void HuffmanDecompressor::printDictionary(DecompressorTreeNode* node) {
+void HuffmanDecompressor::printDictionary(DecompressorTreeNode* node, int treeDepth) {
     if (node->getNodeOne() == NULL && node->getNodeTwo() == NULL) {
-        cout << bitset<16>(node->getKey()) << " " << bitset<16>(node->getLetter()) << endl;
+        cout << makeStringFromBits(node->getKey(), treeDepth) << " -> " << makeStringFromBits(node->getLetter(), letterSizeBits) << endl;
     } else {
-        printDictionary(node->getNodeOne());
-        printDictionary(node->getNodeTwo());
+        printDictionary(node->getNodeOne(), treeDepth + 1);
+        printDictionary(node->getNodeTwo(), treeDepth + 1);
     }
 }
 
 void HuffmanDecompressor::readFileAndDecompress(ifstream* file) {
+	if (debugMode) {
+		cout << "Started decompressing " << inputFileName << " and writing output to " << outputFileName << endl;
+	}
     LETTER bit = readABitFromFile(file);
  		
     ofstream outputFile;
 	outputFile.open(outputFileName.c_str());
     
-    DecompressorTreeNode* currentTreeNode = rootTreeNode;
-  	while (bit != INVALID_CHARACTER) {
-        if (currentTreeNode->isLeaf()) {
-            for (int i = 0; i < letterSizeBits; i++) {
-                writeABitToFile(&outputFile, currentTreeNode->getLetter() >> (letterSizeBits - 1 - i), false);
-            }
-            currentTreeNode = rootTreeNode;
-        } else {
-            if (bit == 0) {
-                currentTreeNode = currentTreeNode->getNodeOne();
-            } else {
-                currentTreeNode = currentTreeNode->getNodeTwo();
-            }
-            bit = readABitFromFile(file);
-        }
-    }
-    
-    outputFile.close();
+    if (outputFile.is_open()) {
+		DecompressorTreeNode* currentTreeNode = rootTreeNode;
+		while (bit != INVALID_CHARACTER) {
+			if (currentTreeNode->isLeaf()) {
+				for (int i = 0; i < letterSizeBits; i++) {
+					writeABitToFile(&outputFile, currentTreeNode->getLetter() >> (letterSizeBits - 1 - i), false);
+				}
+				currentTreeNode = rootTreeNode;
+			} else {
+				if (bit == 0) {
+					currentTreeNode = currentTreeNode->getNodeOne();
+				} else {
+					currentTreeNode = currentTreeNode->getNodeTwo();
+				}
+				bit = readABitFromFile(file);
+			}
+		}
+
+		for (int i = 0; i < leftUncompressedBitsCount; i++) {
+			writeABitToFile(&outputFile, leftUncompressedBits >> (leftUncompressedBitsCount - 1 - i), false);
+		}
+		// Flush last bits
+		writeABitToFile(&outputFile, 0, true);
+		
+    	outputFile.close();
+    } else {
+  		cout << "Error writing file " << outputFileName << endl;
+  		cout << "Quitting..." << endl;
+  		exit(1);
+  	}
+  	
+  	if (debugMode) {
+  		cout << "Ended decompressing file" << endl;
+  	}
 }
 
 LETTER HuffmanDecompressor::readABitFromFile(ifstream* file) {
 	static short currentBitNumber = 0;
-	static char c;
+	static bool initialised = false;
+	static char c1, c2, c3;
+	static short leftUntilEOF = NOT_EOF;
+	
+	if (leftUntilEOF == 1) {
+		return INVALID_CHARACTER;
+	}
+	
+	if (!initialised) {
+		initialised = true;
+		file->get(c2);
+		file->get(c3);
+	}
+	
 	if (currentBitNumber == 0) {
-		if (!(file->get(c))) {
-			return INVALID_CHARACTER;
+		c1 = c2;
+		c2 = c3;
+		if (!(file->get(c3)) && leftUntilEOF == NOT_EOF) {
+			leftUntilEOF = 16 - ignoredBitsCount;
 		}
 		currentBitNumber = 7;
 	} else {
+		if (leftUntilEOF != NOT_EOF) {
+			leftUntilEOF--;
+		}
 		currentBitNumber--;
 	}
-	return (c >> currentBitNumber) & 1;
+	
+	return (c1 >> currentBitNumber) & 1;
 }
 
 short HuffmanDecompressor::writeABitToFile(ofstream* file, LETTER bit, bool flush) {
@@ -162,4 +256,17 @@ short HuffmanDecompressor::writeABitToFile(ofstream* file, LETTER bit, bool flus
 	c = (c | (bit & 0x1));	
 	currentBitNumber++;
 	return 0;
+}
+
+string HuffmanDecompressor::makeStringFromBits(LETTER bits, short length) {
+	string result = "";
+	for (short i = 0; i < length; i++) {
+		if (bits & 0x1) {
+			result = "1" + result;
+		} else {
+			result = "0" + result;
+		}
+		bits = bits >> 1;
+	}
+	return result;
 }

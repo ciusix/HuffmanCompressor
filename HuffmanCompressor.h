@@ -35,6 +35,10 @@ struct LetterPair {
         vector<LetterPair*> pairList;
         short leftBitsLength;
         LETTER leftBits;
+        bool debugMode;
+        string extension;
+        short extensionLength;
+        LETTER ignoredTrailingBits;
                
         void readFileAndMakeNodesList();
         void makeTreeFromNodesList();
@@ -45,12 +49,14 @@ struct LetterPair {
 		void addDictionaryToFile();
 		void addNodeToDictionary(CompressorTreeNode*, ofstream*);
 		void addMetaDataToFile();
+		void writeIgnoredTrailingBits();
         LETTER readABitFromFile(ifstream*);
         short writeABitToFile(ofstream*, LETTER, bool);
         void addLetterToNodesList(LETTER);
+        string makeStringFromBits(LETTER, short); 
 
     public:
-        HuffmanCompressor(string, string, short);
+        HuffmanCompressor(string, short, bool);
         void compress();
         
 };
