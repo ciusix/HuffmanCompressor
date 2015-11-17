@@ -16,14 +16,11 @@ class DecompressorTreeNode {
     	DecompressorTreeNode* nodeTwo;
 
 		LETTER letter;
-        LETTER key;
     public:
         DecompressorTreeNode();
         
         void setLetter(LETTER);
         LETTER getLetter();
-        void setKey(LETTER);
-        LETTER getKey();
         void setNodeOne(DecompressorTreeNode*);
         DecompressorTreeNode* getNodeOne();
         void setNodeTwo(DecompressorTreeNode*);

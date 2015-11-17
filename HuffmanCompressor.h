@@ -12,6 +12,7 @@
 #include <vector>
 #include <limits.h>
 #include <bitset>
+#include <vector>
 
 #include "CompressorTreeNode.h"
 
@@ -22,8 +23,8 @@ class HuffmanCompressor {
 struct LetterPair {
 	LETTER letter;
 	
-  	LETTER compressedLetter;
-  	short compressedLetterLength;
+  	vector<LETTER> compressedLetterVector;
+  	int compressedLetterLength;
 };
 
     private:
@@ -43,7 +44,7 @@ struct LetterPair {
         void readFileAndMakeNodesList();
         void makeTreeFromNodesList();
         void makePairsFromTree();
-        void addPairForNode(CompressorTreeNode*, LETTER, int);
+        void addPairForNode(CompressorTreeNode*, vector<LETTER>, int, LETTER, int);
         LetterPair* getPairForLetter(LETTER letter);
         void readFileAndCompress();
 		void addDictionaryToFile();
@@ -53,7 +54,8 @@ struct LetterPair {
         LETTER readABitFromFile(ifstream*);
         short writeABitToFile(ofstream*, LETTER, bool);
         void addLetterToNodesList(LETTER);
-        string makeStringFromBits(LETTER, short); 
+        string makeStringFromBits(LETTER, short);
+        string makeStringFromBits(vector<LETTER>, int);  
 
     public:
         HuffmanCompressor(string, short, bool);

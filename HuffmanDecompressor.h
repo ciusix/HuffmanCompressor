@@ -32,7 +32,7 @@ class HuffmanDecompressor {
 		void readMetaDataFromFile(ifstream*);
 		void readDictionaryFromFile(ifstream*);
         void readDictionaryNode(ifstream*, DecompressorTreeNode*, LETTER);
-        void printDictionary(DecompressorTreeNode*, int);
+        void printDictionary(DecompressorTreeNode*, string);
         void readFileAndDecompress(ifstream*);
 		LETTER readABitFromFile(ifstream*);
         short writeABitToFile(ofstream*, LETTER, bool);

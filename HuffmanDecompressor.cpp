@@ -75,8 +75,15 @@ void HuffmanDecompressor::readMetaDataFromFile(ifstream* inputFile) {
 	if (debugMode) {
 		cout << "Current extension: " << currentExtension << endl;
 	}
-	this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(currentExtension.c_str()) - 1) + "-uncompressed." + extension;
+	
 	extensionLength = strlen(extension.c_str());
+	
+	if (extensionLength == 0) {
+		this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(currentExtension.c_str()) - 1) + "-uncompressed";
+	} else {
+		this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(currentExtension.c_str()) - 1) + "-uncompressed." + extension;
+	}
+	
 	if (debugMode) {
 		cout << "Output file name: " << this->outputFileName << endl;
 	}
@@ -124,7 +131,7 @@ void HuffmanDecompressor::readDictionaryFromFile(ifstream* file) {
     if (debugMode) {
     	cout << "Ended reading dictionary" << endl;
     	cout << "Dictionary:" << endl;
-    	printDictionary(rootNode, 0);
+    	printDictionary(rootNode, "");
     }
 }
 
@@ -137,7 +144,6 @@ void HuffmanDecompressor::readDictionaryNode(ifstream* file, DecompressorTreeNod
             letter = letter | readABitFromFile(file);
         }
         node->setLetter(letter);
-        node->setKey(key);
     } else {
         DecompressorTreeNode* nodeOne = new DecompressorTreeNode();
         DecompressorTreeNode* nodeTwo = new DecompressorTreeNode();
@@ -149,12 +155,12 @@ void HuffmanDecompressor::readDictionaryNode(ifstream* file, DecompressorTreeNod
     }
 }
 
-void HuffmanDecompressor::printDictionary(DecompressorTreeNode* node, int treeDepth) {
+void HuffmanDecompressor::printDictionary(DecompressorTreeNode* node, string key) {
     if (node->getNodeOne() == NULL && node->getNodeTwo() == NULL) {
-        cout << makeStringFromBits(node->getKey(), treeDepth) << " -> " << makeStringFromBits(node->getLetter(), letterSizeBits) << endl;
+        cout << key << " -> " << makeStringFromBits(node->getLetter(), letterSizeBits) << endl;
     } else {
-        printDictionary(node->getNodeOne(), treeDepth + 1);
-        printDictionary(node->getNodeTwo(), treeDepth + 1);
+        printDictionary(node->getNodeOne(), key + "0");
+        printDictionary(node->getNodeTwo(), key + "1");
     }
 }
 
@@ -183,7 +189,6 @@ void HuffmanDecompressor::readFileAndDecompress(ifstream* file) {
 				} else {
 					currentTreeNode = currentTreeNode->getNodeTwo();
 				}
-				
 			}
 		}
 

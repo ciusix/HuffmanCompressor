@@ -1,21 +1,16 @@
-for ((i=2; i<=16; i++)); do	
-	./huffman compress test1.txt $i
-	./huffman decompress test1.compressed
+for ((testNumber=1; testNumber<=4; testNumber++)); do
+	for ((i=2; i<=16; i++)); do	
+		./huffman compress test$testNumber.txt $i
+		./huffman decompress test$testNumber.compressed
 	
-	cmp --silent test1.txt test1-uncompressed.txt || echo "Files are different!" $i "bits"
-	echo "Checked test 1 with " $i " bits";
+		res=$(cmp --silent test$testNumber.txt test$testNumber-uncompressed.txt);
+		if ($res); then
+			echo "OK! Test " $testNumber " | letter size " $i "bits"
+		else
+			echo "FAILED! Files are different!" "Test " $testNumber " | letter size " $i "bits"
+		fi
 	
-	rm test1-uncompressed.txt
-	rm test1.compressed
-done
-
-for ((i=2; i<=16; i++)); do	
-	./huffman compress test2.txt $i
-	./huffman decompress test2.compressed
-	
-	cmp --silent test2.txt test2-uncompressed.txt || echo "Files are different!"
-	echo "Checked test 2 with " $i " bits";
-	
-	rm test2-uncompressed.txt
-	rm test2.compressed
+		rm test$testNumber-uncompressed.txt
+		rm test$testNumber.compressed
+	done
 done

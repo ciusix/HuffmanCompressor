@@ -34,9 +34,15 @@ HuffmanCompressor::HuffmanCompressor(string inputFileName,
 	if (debugMode) {
 		cout << "Current extension: " << extension << endl;
 	}
-	this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(extension.c_str()) - 1) + ".compressed";
 	
 	extensionLength = strlen(extension.c_str());
+	
+	if (extensionLength == 0) {
+		this->outputFileName = inputFileName + ".compressed";
+	} else {
+		this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(extension.c_str()) - 1) + ".compressed";
+	}
+	
 	if (debugMode) {
 		cout << "Output file name: " << this->outputFileName << endl;
 	}
@@ -172,7 +178,9 @@ void HuffmanCompressor::makePairsFromTree() {
 		cout << "Started making pairs of dictionary values (short letters) for existing keys (letters)" << endl;
 	}
 	
-	addPairForNode(rootNode, 0, 0);
+	// addPairForNode(rootNode, 0, 0);
+	vector<LETTER> v;
+	addPairForNode(rootNode, v, 0, 0, 0);
 	
 	if (debugMode) {
 		cout << "Ended making pairs" << endl;
@@ -180,22 +188,33 @@ void HuffmanCompressor::makePairsFromTree() {
 		for (unsigned int i = 0; i < pairList.size(); i++) {
 			cout << makeStringFromBits(pairList[i]->letter, letterSizeBits)
 			     << " -> "
-			     << makeStringFromBits(pairList[i]->compressedLetter, pairList[i]->compressedLetterLength)
+			     << makeStringFromBits(pairList[i]->compressedLetterVector, pairList[i]->compressedLetterLength)
 			     << endl;
 		}
 	}	
 }
 
-void HuffmanCompressor::addPairForNode(CompressorTreeNode* node, LETTER prefix, int length) {
+void HuffmanCompressor::addPairForNode(CompressorTreeNode* node, vector<LETTER> vectorOfLetters, int length, LETTER prefix, int prefixLength) {
 	if (node->getNodeOne() != NULL && node->getNodeTwo() != NULL) {
 		length++;
-		addPairForNode(node->getNodeOne(), (prefix << 1), length);
-		addPairForNode(node->getNodeTwo(), ((prefix << 1) | 1), length);
+		
+		if (prefixLength == 16) {
+			vectorOfLetters.push_back(prefix);
+			prefix = 0;
+			prefixLength = 0;
+		}
+		prefixLength++;
+		
+		
+		addPairForNode(node->getNodeOne(), vectorOfLetters, length, (prefix << 1), prefixLength);
+		addPairForNode(node->getNodeTwo(), vectorOfLetters, length, ((prefix << 1) | 1), prefixLength);
 	} else {
 		LetterPair* newPair = new LetterPair();
-		
+				
+		vectorOfLetters.push_back(prefix);
+				
 		newPair->letter = node->getLetter();
-		newPair->compressedLetter = prefix;
+		newPair->compressedLetterVector = vectorOfLetters;
 		newPair->compressedLetterLength = length;
 		
 		pairList.push_back(newPair);
@@ -243,8 +262,15 @@ void HuffmanCompressor::readFileAndCompress() {
     		if (currentBitInInputLetter == letterSizeBits) {
     			LetterPair* pair = getPairForLetter(inputLetter);
     			
-    			for (int i = 0; i < pair->compressedLetterLength; i++) {
-    				writeABitToFile(&outputFile, (pair->compressedLetter) >> (pair->compressedLetterLength - 1 - i) , false);
+    			for (int j = 0; j < pair->compressedLetterVector.size()-1; j++) {
+    				for (int i = 15; i >= 0; i--) {
+    				    writeABitToFile(&outputFile, (pair->compressedLetterVector.at(j)) >> i , false);
+    				}
+    			}
+    			
+    			int leftToWrite = pair->compressedLetterLength - ((pair->compressedLetterVector.size() - 1) * 16);
+    			for (int i = 0; i < leftToWrite; i++) {
+    				writeABitToFile(&outputFile, (pair->compressedLetterVector.at(pair->compressedLetterVector.size() - 1)) >> (leftToWrite - 1 - i) , false);
     			}
     			
     			inputLetter = 0;
@@ -417,5 +443,20 @@ string HuffmanCompressor::makeStringFromBits(LETTER bits, short length) {
 		}
 		bits = bits >> 1;
 	}
+	return result;
+}
+
+string HuffmanCompressor::makeStringFromBits(vector<LETTER> bitsVector, int length) {
+	string result = "";
+	int done = 0;
+	
+	for (int j = 0; j < bitsVector.size() - 1; j++) {
+    	result = result + makeStringFromBits(bitsVector.at(j), 16);
+    	result += " ";
+    	done += 16;
+    }
+	int left = length - done;
+	result = result + makeStringFromBits(bitsVector.at(bitsVector.size() - 1), left);
+	
 	return result;
 }

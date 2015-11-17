@@ -4,7 +4,6 @@ DecompressorTreeNode::DecompressorTreeNode(){
 	this->nodeOne = NULL;
 	this->nodeTwo = NULL;
     this->letter = 0;
-    this->key = 0;
 }
 
 void DecompressorTreeNode::setLetter(LETTER letter) {
@@ -13,14 +12,6 @@ void DecompressorTreeNode::setLetter(LETTER letter) {
 
 LETTER DecompressorTreeNode::getLetter() {
     return letter;
-}
-
-void DecompressorTreeNode::setKey(LETTER key) {
-    this->key = key;
-}
-
-LETTER DecompressorTreeNode::getKey() {
-    return key;
 }
 
 void DecompressorTreeNode::setNodeOne(DecompressorTreeNode* nodeOne) {
