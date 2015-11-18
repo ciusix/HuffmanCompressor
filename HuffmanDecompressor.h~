@@ -44,7 +44,7 @@ class HuffmanDecompressor {
         string makeStringFromBits(LETTER, short); 
         
     public:
-        HuffmanDecompressor(string, bool, string);
+        HuffmanDecompressor(string, bool);
         void decompress();
 };
 

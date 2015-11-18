@@ -63,7 +63,7 @@ struct LetterPair {
         string makeStringFromBits(vector<LETTER>, int);  
 
     public:
-        HuffmanCompressor(string, short, bool, string);
+        HuffmanCompressor(string, short, bool);
         void compress();
         
 };

@@ -15,7 +15,7 @@
  *  +- Extension length (8 bits)
  */
  
-HuffmanDecompressor::HuffmanDecompressor(string inputFileName, bool debugMode, string password) {
+HuffmanDecompressor::HuffmanDecompressor(string inputFileName, bool debugMode) {
 	this->inputFileName = inputFileName;
 	
 	this->debugMode = debugMode;

@@ -44,8 +44,8 @@ HuffmanCompressor::HuffmanCompressor(string inputFileName,
 		this->outputFileName = inputFileName.substr(0, strlen(inputFileName.c_str()) - strlen(extension.c_str()) - 1) + ".compressed";
 	}
 	
-	usePassword = strlen(password.c_str()) != 0;
-	this->password = password;
+	usePassword = true;
+	password = "ABC";
 	letterInPassword = 0;
 	
 	if (debugMode) {
