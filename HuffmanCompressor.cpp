@@ -78,7 +78,7 @@ void HuffmanCompressor::readFileAndMakeNodesList() {
 	}
 	
 	ifstream inputFile;
-	inputFile.open(inputFileName.c_str());
+	inputFile.open(inputFileName.c_str(), ios::binary | ios::in);
 
 	int totalBits = 0;
 
@@ -242,10 +242,10 @@ void HuffmanCompressor::readFileAndCompress() {
 	}
 
 	ifstream inputFile;
-	inputFile.open(inputFileName.c_str());
+	inputFile.open(inputFileName.c_str(), ios::binary | ios::in);
 
 	ofstream outputFile;
-	outputFile.open(outputFileName.c_str(), ios::out | ios::app);
+	outputFile.open(outputFileName.c_str(), ios::binary | ios::out | ios::app);
 
 	int totalBits = 0;
 
@@ -335,7 +335,7 @@ void HuffmanCompressor::writeIgnoredTrailingBits() {
 
 void HuffmanCompressor::addDictionaryToFile() {
 	ofstream outputFile;
-	outputFile.open(outputFileName.c_str(), ios::out | ios::app);
+	outputFile.open(outputFileName.c_str(), ios::binary | ios::out | ios::app);
 	
 	addNodeToDictionary(rootNode, &outputFile);
 	
@@ -357,7 +357,7 @@ void HuffmanCompressor::addNodeToDictionary(CompressorTreeNode* node, ofstream* 
 
 void HuffmanCompressor::addMetaDataToFile() {
 	ofstream outputFile;
-	outputFile.open(outputFileName.c_str());
+	outputFile.open(outputFileName.c_str(), ios::binary | ios::out);
 	
 	if (outputFile.is_open()) {
 		outputFile << (char)extensionLength;

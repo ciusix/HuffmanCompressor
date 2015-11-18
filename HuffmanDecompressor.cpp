@@ -31,7 +31,7 @@ void HuffmanDecompressor::decompress() {
 	}
 	
 	ifstream inputFile;
-	inputFile.open(inputFileName.c_str());
+	inputFile.open(inputFileName.c_str(), ios::binary | ios::in);
 	
 	if (inputFile.is_open()) {
 		readMetaDataFromFile(&inputFile);
@@ -176,7 +176,7 @@ void HuffmanDecompressor::readFileAndDecompress(ifstream* file) {
     LETTER bit = 0x1; // readABitFromFile(file);
  		
     ofstream outputFile;
-	outputFile.open(outputFileName.c_str());
+	outputFile.open(outputFileName.c_str(), ios::binary | ios::out);
     
     if (outputFile.is_open()) {
 		DecompressorTreeNode* currentTreeNode = rootTreeNode;
