@@ -12,10 +12,10 @@ using namespace std;
 class DecompressorTreeNode {
 
     private:
-    	DecompressorTreeNode* nodeOne;
-    	DecompressorTreeNode* nodeTwo;
+        DecompressorTreeNode* nodeOne;
+        DecompressorTreeNode* nodeTwo;
 
-		LETTER letter;
+        LETTER letter;
     public:
         DecompressorTreeNode();
         

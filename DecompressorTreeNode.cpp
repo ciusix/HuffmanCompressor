@@ -1,8 +1,8 @@
 #include "DecompressorTreeNode.h"
 
 DecompressorTreeNode::DecompressorTreeNode(){
-	this->nodeOne = NULL;
-	this->nodeTwo = NULL;
+    this->nodeOne = NULL;
+    this->nodeTwo = NULL;
     this->letter = 0;
 }
 

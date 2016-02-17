@@ -12,11 +12,11 @@ using namespace std;
 class CompressorTreeNode {
 
     private:
-    	CompressorTreeNode* nodeOne;
-    	CompressorTreeNode* nodeTwo;
+        CompressorTreeNode* nodeOne;
+        CompressorTreeNode* nodeTwo;
 
-		LETTER letter;
-		int count;
+        LETTER letter;
+        int count;
 
     public:
         CompressorTreeNode(LETTER);

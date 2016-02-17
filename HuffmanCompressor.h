@@ -23,15 +23,15 @@ using namespace std;
 class HuffmanCompressor {
 
 struct LetterPair {
-	LETTER letter;
-	
-  	vector<LETTER> compressedLetterVector;
-  	int compressedLetterLength;
+    LETTER letter;
+    
+      vector<LETTER> compressedLetterVector;
+      int compressedLetterLength;
 };
 
     private:
-    	string inputFileName;
-    	string outputFileName;
+        string inputFileName;
+        string outputFileName;
         short letterSizeBits;
         CompressorTreeNode* rootNode;
         vector<CompressorTreeNode*> nodeList;
@@ -52,10 +52,10 @@ struct LetterPair {
         void addPairForNode(CompressorTreeNode*, vector<LETTER>, int, LETTER, int);
         LetterPair* getPairForLetter(LETTER letter);
         void readFileAndCompress();
-		void addDictionaryToFile();
-		void addNodeToDictionary(CompressorTreeNode*, ofstream*);
-		void addMetaDataToFile();
-		void writeIgnoredTrailingBits();
+        void addDictionaryToFile();
+        void addNodeToDictionary(CompressorTreeNode*, ofstream*);
+        void addMetaDataToFile();
+        void writeIgnoredTrailingBits();
         LETTER readABitFromFile(ifstream*);
         short writeABitToFile(ofstream*, LETTER, bool);
         void addLetterToNodesList(LETTER);
