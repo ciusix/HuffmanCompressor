@@ -17,7 +17,7 @@ build: clean huffman
 # countwords.o, counter.o, and scanner.o:
 #
 huffman:  HuffmanCompressor.o HuffmanDecompressor.o
-	$(CC) $(CFLAGS) -o huffman main.cpp HuffmanCompressor.o CompressorTreeNode.o HuffmanDecompressor.o DecompressorTreeNode.o
+	$(CC) $(CFLAGS) -o huffman main.cpp HuffmanCompressor.o CompressorTreeNode.o HuffmanDecompressor.o TreeNode.o
 
 # To create the object file countwords.o, we need the source
 # files countwords.c, scanner.h, and counter.h:
@@ -30,11 +30,11 @@ HuffmanCompressor.o:  HuffmanCompressor.cpp HuffmanCompressor.h CompressorTreeNo
 CompressorTreeNode.o: CompressorTreeNode.cpp CompressorTreeNode.h
 	$(CC) $(CFLAGS) -c CompressorTreeNode.cpp
 	
-HuffmanDecompressor.o:  HuffmanDecompressor.cpp HuffmanDecompressor.h DecompressorTreeNode.o
+HuffmanDecompressor.o:  HuffmanDecompressor.cpp HuffmanDecompressor.h TreeNode.o
 	$(CC) $(CFLAGS) -c HuffmanDecompressor.cpp
     
-DecompressorTreeNode.o: DecompressorTreeNode.cpp DecompressorTreeNode.h
-	$(CC) $(CFLAGS) -c DecompressorTreeNode.cpp
+TreeNode.o: TreeNode.cpp TreeNode.h
+	$(CC) $(CFLAGS) -c TreeNode.cpp
 	
 clean:
 ifeq ($(OS),Windows_NT)
