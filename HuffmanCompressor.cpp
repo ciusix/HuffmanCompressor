@@ -133,8 +133,8 @@ void HuffmanCompressor::makeTreeFromNodesList() {
     }
 
     while (nodeList.size() != 1) {
-        CompressorTreeNode* firstSmallest = NULL;
-        CompressorTreeNode* secondSmallest = NULL;
+        TreeNode* firstSmallest = NULL;
+        TreeNode* secondSmallest = NULL;
         
         int firstPos = -1;
         int secondPos = -1;
@@ -169,7 +169,7 @@ void HuffmanCompressor::makeTreeFromNodesList() {
             nodeList.erase(nodeList.begin() + firstPos);
         }
         
-        nodeList.push_back(new CompressorTreeNode(firstSmallest, secondSmallest));
+        nodeList.push_back(new TreeNode(firstSmallest, secondSmallest));
     }
     rootNode = nodeList[0];
     
@@ -199,8 +199,8 @@ void HuffmanCompressor::makePairsFromTree() {
     }    
 }
 
-void HuffmanCompressor::addPairForNode(CompressorTreeNode* node, vector<LETTER> vectorOfLetters, int length, LETTER prefix, int prefixLength) {
-    if (node->getNodeOne() != NULL && node->getNodeTwo() != NULL) {
+void HuffmanCompressor::addPairForNode(TreeNode* node, vector<LETTER> vectorOfLetters, int length, LETTER prefix, int prefixLength) {
+    if (node->getLeftChild() != NULL && node->getRightChild() != NULL) {
         length++;
         
         if (prefixLength == 16) {
@@ -211,8 +211,8 @@ void HuffmanCompressor::addPairForNode(CompressorTreeNode* node, vector<LETTER> 
         prefixLength++;
         
         
-        addPairForNode(node->getNodeOne(), vectorOfLetters, length, (prefix << 1), prefixLength);
-        addPairForNode(node->getNodeTwo(), vectorOfLetters, length, ((prefix << 1) | 1), prefixLength);
+        addPairForNode(node->getLeftChild(), vectorOfLetters, length, (prefix << 1), prefixLength);
+        addPairForNode(node->getRightChild(), vectorOfLetters, length, ((prefix << 1) | 1), prefixLength);
     } else {
         LetterPair* newPair = new LetterPair();
                 
@@ -342,11 +342,11 @@ void HuffmanCompressor::addDictionaryToFile() {
     outputFile.close();
 }
 
-void HuffmanCompressor::addNodeToDictionary(CompressorTreeNode* node, ofstream* outputFile) {
-    if (node->getNodeOne() != NULL && node->getNodeTwo() != NULL) {
+void HuffmanCompressor::addNodeToDictionary(TreeNode* node, ofstream* outputFile) {
+    if (node->getLeftChild() != NULL && node->getRightChild() != NULL) {
         writeABitToFile(outputFile, NOT_LEAF_BIT, false);
-        addNodeToDictionary(node->getNodeOne(), outputFile);
-        addNodeToDictionary(node->getNodeTwo(), outputFile);
+        addNodeToDictionary(node->getLeftChild(), outputFile);
+        addNodeToDictionary(node->getRightChild(), outputFile);
     } else {
         writeABitToFile(outputFile, LEAF_BIT, false);
         for (int i = 0; i < letterSizeBits; i++) {
@@ -436,14 +436,14 @@ short HuffmanCompressor::writeABitToFile(ofstream* file, LETTER bit, bool flush)
 }
 
 void HuffmanCompressor::addLetterToNodesList(LETTER letter) {
-    for (vector<CompressorTreeNode*>::iterator it = nodeList.begin(); it != nodeList.end(); ++it) {
+    for (vector<TreeNode*>::iterator it = nodeList.begin(); it != nodeList.end(); ++it) {
         if ((*it)->getLetter() == letter) {
             (*it)->incCount();
             return;
         }
     }
     
-    nodeList.push_back(new CompressorTreeNode(letter));
+    nodeList.push_back(new TreeNode(letter));
 }
 
 string HuffmanCompressor::makeStringFromBits(LETTER bits, short length) {

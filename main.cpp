@@ -9,39 +9,33 @@ void decompressFile(std::string, bool);
 
 int main (int argc, char *argv[]) {
     if (argc == 1) {
-        cout << "Missing parameters!" << endl;
+        std::cout << "Missing parameters! Usage:" << argv[0] << " [compress | decompress] [letterSize] file" << std::endl;
         return 1;
     }
     
-    bool debug = false;
+    bool verbose = false;
     if (strcmp(argv[1], "compress") == 0) {
-        // huffman compress file 1
-        // huffman compress file 1 D
-    
         if (argc != 4 && argc != 5) {
-            std::cout << "Wrong number of parameters." << std::endl;
+            std::cout << "Wrong number of parameters. Usage:" << argv[0] << " compress letterSize file" << std::endl;
             return 1;
         }
 
         if (argc == 5 && strcmp(argv[4], "D") == 0) {
-            debug = true;
+            verbose = true;
         }
-        compressFile(argv[2], atoi(argv[3]), debug);
+        compressFile(argv[2], atoi(argv[3]), verbose);
         return 0;
         
     } else if (strcmp(argv[1], "decompress") == 0) {
-        // huffman compress file
-        // huffman compress file D
-    
         if (argc != 3 && argc != 4) {
-            std::cout << "Wrong number of parameters." << std::endl;
+            std::cout << "Wrong number of parameters. Usage:" << argv[0] << " decompress file" << std::endl;
             return 1;
         }
 
         if (argc == 4 && strcmp(argv[3], "D") == 0) {
-            debug = true;
+            verbose = true;
         }
-        decompressFile(argv[2], debug);
+        decompressFile(argv[2], verbose);
         return 0;
     } else {
         std::cout << "Unknown action (compress | decompress)" << std::endl;

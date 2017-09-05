@@ -1,7 +1,6 @@
 #ifndef HUFFMANCOMPRESSOR_H
 #define HUFFMANCOMPRESSOR_H
 
-#define LETTER unsigned short
 #define INVALID_CHARACTER 0x40
 #define NOT_LEAF_BIT 0
 #define LEAF_BIT 1
@@ -16,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "CompressorTreeNode.h"
+#include "TreeNode.h"
 
 using namespace std;
 
@@ -33,8 +32,8 @@ struct LetterPair {
         string inputFileName;
         string outputFileName;
         short letterSizeBits;
-        CompressorTreeNode* rootNode;
-        vector<CompressorTreeNode*> nodeList;
+        TreeNode* rootNode;
+        vector<TreeNode*> nodeList;
         vector<LetterPair*> pairList;
         short leftBitsLength;
         LETTER leftBits;
@@ -49,11 +48,11 @@ struct LetterPair {
         void readFileAndMakeNodesList();
         void makeTreeFromNodesList();
         void makePairsFromTree();
-        void addPairForNode(CompressorTreeNode*, vector<LETTER>, int, LETTER, int);
+        void addPairForNode(TreeNode*, vector<LETTER>, int, LETTER, int);
         LetterPair* getPairForLetter(LETTER letter);
         void readFileAndCompress();
         void addDictionaryToFile();
-        void addNodeToDictionary(CompressorTreeNode*, ofstream*);
+        void addNodeToDictionary(TreeNode*, ofstream*);
         void addMetaDataToFile();
         void writeIgnoredTrailingBits();
         LETTER readABitFromFile(ifstream*);
