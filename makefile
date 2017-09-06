@@ -27,12 +27,18 @@ huffman:  HuffmanCompressor.o HuffmanDecompressor.o
 HuffmanCompressor.o:  HuffmanCompressor.cpp HuffmanCompressor.h TreeNode.o
 	$(CC) $(CFLAGS) -c HuffmanCompressor.cpp
 
-HuffmanDecompressor.o:  HuffmanDecompressor.cpp HuffmanDecompressor.h TreeNode.o
+HuffmanDecompressor.o:  HuffmanDecompressor.cpp HuffmanDecompressor.h TreeNode.o FileReader.o FileWriter.o
 	$(CC) $(CFLAGS) -c HuffmanDecompressor.cpp
     
 TreeNode.o: TreeNode.cpp TreeNode.h
 	$(CC) $(CFLAGS) -c TreeNode.cpp
-	
+
+FileReader.o: FileReader.cpp FileReader.h
+	$(CC) $(CFLAGS) -c FileReader.cpp
+
+FileWriter.o: FileWriter.cpp FileWriter.h
+	$(CC) $(CFLAGS) -c FileWriter.cpp
+
 clean:
 ifeq ($(OS),Windows_NT)
 	del *.o
