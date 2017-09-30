@@ -1,21 +1,13 @@
 #include "CompressorBase.h"
 
-CompressorBase(std::string inputFileName, bool verbose) {
+CompressorBase::CompressorBase(std::string inputFileName, bool verbose) {
     this->inputFileName = inputFileName;
-    this->letterSizeBits = letterSizeBits;
     this->verbose = verbose;
 }
 
 void CompressorBase::initialize() {
-    ifstream inputFile;
-    inputFile.open(inputFileName.c_str(), ios::binary | ios::in);
-
-    reader = new FileReader(&inputFile);
-
-    ofstream outputFile;
-    outputFile.open(outputFileName.c_str(), ios::binary | ios::out);
-
-    writer = new FileWriter(&outputFile);
+    reader = new FileReader(inputFileName);
+    writer = new FileWriter(outputFileName);
 }
 
 void CompressorBase::closeFiles() {
@@ -23,9 +15,13 @@ void CompressorBase::closeFiles() {
     writer->close();
 }
 
-void CompressorBase::printTree(TreeNode* node, int letterSizeBits, std::string key) {
+void CompressorBase::printTree(TreeNode* node, short letterSizeBits) {
+    printTree(node, letterSizeBits, "");
+}
+
+void CompressorBase::printTree(TreeNode* node, short letterSizeBits, std::string key) {
     if (node->isLeaf()) {
-        std::cout << key << " -> " << makeStringFromBits(node->getLetter(), letterSizeBits) << std::endl;
+        std::cout << key << " -> " << makeStringFromBits(node->getLetter(), letterSizeBits) << " count " << node->getCount() << std::endl;
     } else {
         printTree(node->getLeftChild(), letterSizeBits, key + "0");
         printTree(node->getRightChild(), letterSizeBits, key + "1");
@@ -41,6 +37,18 @@ std::string CompressorBase::makeStringFromBits(LETTER bits, short length) {
             result = "0" + result;
         }
         bits = bits >> 1;
+    }
+    return result;
+}
+
+std::string CompressorBase::makeStringFromBits(std::vector<LETTER> bits) {
+    std::string result = "";
+    for (short i = 0; i < bits.size(); i++) {
+        if (bits.at(i) == 1) {
+            result = "1" + result;
+        } else {
+            result = "0" + result;
+        }
     }
     return result;
 }

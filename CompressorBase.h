@@ -4,6 +4,8 @@
 #include <bitset>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+#include <vector>
 #include "TreeNode.h"
 #include "FileReader.h"
 #include "FileWriter.h"
@@ -23,8 +25,10 @@ class CompressorBase {
         CompressorBase(std::string, bool);
         void initialize();
         void closeFiles();
-        void printTree(TreeNode*, std::string);
+        void printTree(TreeNode*, short);
+        void printTree(TreeNode*, short, std::string);
         std::string makeStringFromBits(LETTER, short);
+        std::string makeStringFromBits(std::vector<LETTER> bits);
 };
 
 #endif

@@ -15,54 +15,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "TreeNode.h"
-
-using namespace std;
-
-class HuffmanCompressor {
+#include "CompressorBase.h"
 
 struct LetterPair {
     LETTER letter;
     
-      vector<LETTER> compressedLetterVector;
-      int compressedLetterLength;
+    std::vector<LETTER> compressedLetterBits;
 };
 
+class HuffmanCompressor : CompressorBase {
+
     private:
-        string inputFileName;
-        string outputFileName;
-        short letterSizeBits;
         TreeNode* rootNode;
-        vector<TreeNode*> nodeList;
-        vector<LetterPair*> pairList;
-        short leftBitsLength;
-        LETTER leftBits;
-        bool debugMode;
-        string extension;
-        short extensionLength;
-        LETTER ignoredTrailingBits;
-        string password;
-        int letterInPassword;
-        bool usePassword;
-               
+        std::vector<TreeNode*> nodeList;
+        std::vector<LetterPair*> pairList;
+        int uncompressedBitsCount;
+        LETTER uncompressedBits;
+        int trailingZerosCount;
+
         void readFileAndMakeNodesList();
-        void makeTreeFromNodesList();
-        void makePairsFromTree();
-        void addPairForNode(TreeNode*, vector<LETTER>, int, LETTER, int);
-        LetterPair* getPairForLetter(LETTER letter);
-        void readFileAndCompress();
-        void addDictionaryToFile();
-        void addNodeToDictionary(TreeNode*, ofstream*);
-        void addMetaDataToFile();
-        void writeIgnoredTrailingBits();
-        LETTER readABitFromFile(ifstream*);
-        short writeABitToFile(ofstream*, LETTER, bool);
         void addLetterToNodesList(LETTER);
-        string makeStringFromBits(LETTER, short);
-        string makeStringFromBits(vector<LETTER>, int);  
+        void makeTreeFromNodesList();
+        void makePairFromNode(TreeNode*, std::vector<LETTER>);
+        LetterPair* getPairForLetter(LETTER);
+        void readFileAndCompress();
 
     public:
-        HuffmanCompressor(string, short, bool, string);
+        HuffmanCompressor(std::string, short, bool);
         void compress();
         
 };
