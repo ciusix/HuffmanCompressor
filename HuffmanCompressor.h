@@ -27,15 +27,13 @@ class HuffmanCompressor : CompressorBase {
 
     private:
         TreeNode* rootNode;
-        std::vector<TreeNode*> nodeList;
         std::vector<LetterPair*> pairList;
         int uncompressedBitsCount;
         LETTER uncompressedBits;
-        int trailingZerosCount;
+        int paddingZeroCount;
 
-        void readFileAndMakeNodesList();
-        void addLetterToNodesList(LETTER);
-        void makeTreeFromNodesList();
+        std::vector<TreeNode*> makeNodeList();
+        void makeTree(std::vector<TreeNode*>);
         void makePairFromNode(TreeNode*, std::vector<LETTER>);
         LetterPair* getPairForLetter(LETTER);
         void readFileAndCompress();

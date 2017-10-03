@@ -10,8 +10,7 @@ void HuffmanCompressor::compress() {
     }
 
     initialize();
-    readFileAndMakeNodesList();
-    makeTreeFromNodesList();
+    makeTree(makeNodeList());
     printTree(rootNode, letterSizeBits);
     
     if (verbose) {
@@ -33,41 +32,52 @@ void HuffmanCompressor::compress() {
     }
 }
 
-void HuffmanCompressor::readFileAndMakeNodesList() {
+/**
+ * Read file for the first time and make a letter->count pair list.
+ * Returns vector of TreeNode objects with letter and count properties set.
+ */
+std::vector<TreeNode*> HuffmanCompressor::makeNodeList() {
     if (verbose) {
         std::cout << "Started reading file " << inputFileName << " for the first time to build a dictionary" << std::endl;
     }
     
-    int totalBits = 0;
-
     short bitsUntilEOF = INFINITY;
     LETTER letter;
+    std::vector<TreeNode*> nodeList;
+    int totalBits = 0;
 
     while (bitsUntilEOF == INFINITY || bitsUntilEOF >= letterSizeBits) {
         letter = reader->readBitsFromFile(letterSizeBits, &bitsUntilEOF);
-        addLetterToNodesList(letter);
+        totalBits += letterSizeBits;
+
+        bool letterInList = false;
+        for (unsigned int i = 0; i < nodeList.size(); i++) {
+            if (nodeList[i]->getLetter() == letter) {
+                nodeList[i]->incCount();
+                letterInList = true;
+                break;
+            }
+        }
+    
+        if (!letterInList) {
+            nodeList.push_back(new TreeNode(letter));
+        }
     }
 
     uncompressedBitsCount = bitsUntilEOF;
     uncompressedBits = reader->readBitsFromFile(uncompressedBitsCount, &bitsUntilEOF);
 
-    std::cout << "Left uncompressed bits " << makeStringFromBits(uncompressedBits, uncompressedBitsCount) << std::endl; 
-}
-
-void HuffmanCompressor::addLetterToNodesList(LETTER letter) {
-    for (unsigned int i = 0; i < nodeList.size(); i++) {
-        if (nodeList[i]->getLetter() == letter) {
-            nodeList[i]->incCount();
-            return;
-        }
-    }
-    
-    nodeList.push_back(new TreeNode(letter));
-}
-
-void HuffmanCompressor::makeTreeFromNodesList() {
     if (verbose) {
-        std::cout << "Started making tree nodes" << std::endl;
+        std::cout << "Left uncompressed bits (" << uncompressedBitsCount << ") " << makeStringFromBits(uncompressedBits, uncompressedBitsCount) << std::endl;
+        std::cout << "Finished reading file for the first time. Nodes: " << nodeList.size() << ". Content size: " << totalBits << " bits" << std::endl;
+    } 
+
+    return nodeList;
+}
+
+void HuffmanCompressor::makeTree(std::vector<TreeNode*> nodeList) {
+    if (verbose) {
+        std::cout << "Started making tree" << std::endl;
     }
 
     while (nodeList.size() != 1) {
@@ -102,7 +112,7 @@ void HuffmanCompressor::makeTreeFromNodesList() {
     rootNode = nodeList[0];
     
     if (verbose) {
-        std::cout << "Ended making tree nodes" << std::endl;
+        std::cout << "Finished making tree" << std::endl;
     }
 }
 
@@ -155,10 +165,10 @@ void HuffmanCompressor::readFileAndCompress() {
         }        
     }
 
-    trailingZerosCount = writer->flush();
+    paddingZeroCount = writer->flush();
 
     if (verbose) {
-        std::cout << "These " << trailingZerosCount << " trailing 0's at the end of " << outputFileName << " should be ignored" << std::endl;
+        std::cout << "These " << paddingZeroCount << " trailing 0's at the end of " << outputFileName << " should be ignored" << std::endl;
         std::cout << "Ended reading file " << inputFileName << " for the second time" << std::endl;
         std::cout << "Ended writing compressed output to " << outputFileName << std::endl;
     }
